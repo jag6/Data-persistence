@@ -23,11 +23,13 @@ public class MainManager : MonoBehaviour
     private bool m_GameOver = false;
 
     //best player data
-    private static int bestScore;
+    private static string bestScore;
     private static string bestPlayer;
 
     void Start()
     {
+        PlayerNameText.text = PlayerManager.Instance.playerName;
+
         LoadGameRank();
 
         const float step = 0.6f;
@@ -44,10 +46,6 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
-
-        PlayerNameText.text = PlayerManager.Instance.playerName;
-
-        SetBestPlayer();
     }
 
     private void Update()
@@ -85,17 +83,18 @@ public class MainManager : MonoBehaviour
         m_GameOver = true;
         GameOverText.SetActive(true);
 
-        CheckBestPlayer();
+        SetBestPlayer();
+        LoadGameRank();
     }
 
     [System.Serializable]
     class SaveData
     {
-        public int bestScore;
+        public string bestScore;
         public string bestPlayer;
     }
 
-    public void SaveGameRank(string bestPlayer, int bestScore)
+    public void SaveGameRank(string bestPlayer, string bestScore)
     {
         SaveData data = new SaveData();
 
@@ -104,6 +103,16 @@ public class MainManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(data);
         File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
+    }
+
+    private void SetBestPlayer()
+    {
+        string currentScore = ScoreText.text;
+
+        bestPlayer = PlayerManager.Instance.playerName;
+        bestScore = currentScore;
+
+        SaveGameRank(bestPlayer, bestScore);
     }
 
     public void LoadGameRank()
@@ -118,32 +127,7 @@ public class MainManager : MonoBehaviour
             bestPlayer = data.bestPlayer;
             bestScore = data.bestScore;
         }
-    }
 
-    private void CheckBestPlayer()
-    {
-        int CurrentScore = PlayerManager.Instance.score;
-
-        if (CurrentScore > bestScore)
-        {
-            bestPlayer = PlayerManager.Instance.playerName;
-            bestScore = CurrentScore;
-
-            BestScoreText.text = $"Best Score - {bestPlayer}: {bestScore}";
-
-            SaveGameRank(bestPlayer, bestScore);
-        }
-    }
-
-    private void SetBestPlayer()
-    {
-        if (bestPlayer == null && bestScore == 0)
-        {
-            BestScoreText.text = "";
-        }
-        else
-        {
-            BestScoreText.text = $"Best Score - {bestPlayer}: {bestScore}";
-        }
+        BestScoreText.text = "Last Score: " + bestPlayer + ": " + bestScore;
     }
 }
